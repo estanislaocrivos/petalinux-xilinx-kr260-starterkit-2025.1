@@ -63,12 +63,19 @@
 };
 
 /*
- * TTC1 is the FreeRTOS tick source on R5_0. If Linux probes it, the
- * cadence_ttc driver rewrites the GIC ITARGETS for its IRQ and the R5
- * stops receiving the tick (vTaskDelay hangs). Keep it away from Linux.
- *
- * TTC0 must stay enabled on the KR260: it drives the fan PWM (pwm-fan).
+ * TTC0 is the FreeRTOS tick source on R5_0 (same as the custom board). If
+ * Linux probes it, the cadence_ttc driver rewrites the GIC ITARGETS for its
+ * IRQ and the R5 stops receiving the tick (vTaskDelay hangs). Keep it away
+ * from Linux.
  */
-&ttc1 {
+&ttc0 {
+	status = "disabled";
+};
+
+/*
+ * The fan PWM comes from TTC0, which now belongs to the R5. Without it the
+ * fan runs at full speed (fan_en_b default state).
+ */
+&pwm_fan {
 	status = "disabled";
 };
