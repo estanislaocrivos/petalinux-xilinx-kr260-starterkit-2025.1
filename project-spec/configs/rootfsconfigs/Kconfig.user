@@ -1,0 +1,22 @@
+menu "user packages " 
+config gpio-demo  
+	 bool "gpio-demo"
+	 help
+	
+config my-app  
+	 bool "my-app"
+	 help
+	
+config my-driver  
+	 bool "my-driver"
+	 help
+	
+config packagegroup-kria  
+	 bool "packagegroup-kria"
+	 help
+	
+config peekpoke  
+	 bool "peekpoke"
+	 help
+	
+endmenu
