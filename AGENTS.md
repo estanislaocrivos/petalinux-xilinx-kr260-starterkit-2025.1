@@ -45,22 +45,26 @@ partitioned as FAT32 (p1) + ext4 (p2). Serial console: `/dev/ttyUSB1`, 115200 8N
   - `rf5ss@ff9a0000` (`xlnx,zynqmp-r5fss`, split mode, R5_0 with TCM A/B)
   - `shm_uio` (generic-uio over the shared memory)
   - `ipi_amp` (generic-uio over `psu_ipi_2` @ `0xff320000`, SPI 34)
-- **TTC0 drives the fan PWM on the KR260** (`pwm-fan` in `zynqmp-sm-k26-reva.dtsi`) and must stay
-  enabled. The FreeRTOS tick uses **TTC1** (`0xff120000`), disabled for Linux in `system-user.dtsi`.
-  The R5 firmware BSP still has to be retargeted from TTC0 to TTC1 (`configTIMER_*` in
-  `FreeRTOSConfig.h`).
+- The FreeRTOS tick uses **TTC0** (`0xff110000`), same as the custom board, so one firmware build
+  serves both. `system-user.dtsi` disables `ttc0` and `pwm-fan` for Linux.
+  - Trade-off: on the KR260 the fan PWM is TTC0 `emio_ttc0_wave_o` routed through the PL to
+    `fan_en_b` (pin A12, see `kria_starter_kit.bd` / `default.xdc`). With TTC0 owned by the R5 the
+    fan runs at full speed. The `fancontrol` service fails once at boot (harmless).
+  - A custom PL design must route `emio_ttc0_wave_o` to `fan_en_b` if fan control is ever needed.
+- Validated 2026-09-25: the `sntp` role (R5 FreeRTOS ↔ A53 over IPI + shared memory) runs on this
+  image. Firmware-side 2025.1 pitfalls (xiltimer tick on the wrong TTC, IPI registered with the
+  GIC ID instead of the SPI number) are fixed in that repo's `gen_bsp.py` / `platform.c`.
+- R5 firmware `stdout` is `psu_uart_1`, the same UART as the Linux console (`ttyPS1`). Accepted:
+  the board is used over SSH.
 - The XSA does not need regenerating: TTC0–TTC3 are already enabled in the starter kit design.
 - Kernel already provides `UIO`, `UIO_PDRV_GENIRQ` (module) and `XLNX_R5_REMOTEPROC`.
-  `uio_pdrv_genirq` must be loaded before `bind-uio.sh` runs.
-
 - CMA is reduced to **512 MB** (`CONFIG_SUBSYSTEM_EXTRA_BOOTARGS`). With `cma=900M` the R5 reserved
   regions split low DDR and no 900 MB contiguous hole was left: CMA failed, the FPGA manager could
   not load the base bitstream and the fan (TTC0 PWM routed through the PL) ran at full speed.
 
 ## Pending
 
-- Compare remaining config from `mimo_k26` (kernel fragments, `CONFIG_SUBSYSTEM_USER_CMDLINE`,
-  rootfs packages, custom `meta-user` recipes) and port only what is not board-specific.
-- Retarget the FreeRTOS tick to TTC1 and rebuild the R5 firmware.
+- Port the `app-r5-0` recipe from `mimo_k26` (installs the R5 `.elf` into `/lib/firmware`). The rest
+  of its `meta-user` (xvc, gps-irq-driver, hellopm, watchdog, `image.ub` boot files) is board-specific.
 - Bind the `generic-uio` nodes at boot: prefer `/etc/modules-load.d/` (load `uio_pdrv_genirq`) +
   `/etc/modprobe.d/` (`options uio_pdrv_genirq of_id=generic-uio`) over `bind-uio.sh`.

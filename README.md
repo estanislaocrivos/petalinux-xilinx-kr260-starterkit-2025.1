@@ -10,7 +10,7 @@ that talks to Linux through libmetal (shared memory + IPI).
   - reserved DDR for R5_0: firmware @ `0x3ed00000`, shared memory @ `0x3ee00000` (1 MB each)
   - `rf5ss` node so Linux can load and start R5_0 with `remoteproc`
   - `generic-uio` nodes for the shared memory and the IPI channel (`0xff320000`, SPI 34)
-  - TTC1 disabled for Linux (FreeRTOS tick); TTC0 stays with the fan PWM
+  - TTC0 and `pwm-fan` disabled for Linux: TTC0 is the FreeRTOS tick, so the fan runs at full speed
 - **CMA reduced to 512 MB** (`cma=512M`), so it still fits in low DDR next to the R5 regions.
 
 ## Layout
