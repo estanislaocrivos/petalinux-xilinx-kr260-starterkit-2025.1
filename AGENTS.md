@@ -51,6 +51,9 @@ partitioned as FAT32 (p1) + ext4 (p2). Serial console: `/dev/ttyUSB1`, 115200 8N
     `fan_en_b` (pin A12, see `kria_starter_kit.bd` / `default.xdc`). With TTC0 owned by the R5 the
     fan runs at full speed. The `fancontrol` service fails once at boot (harmless).
   - A custom PL design must route `emio_ttc0_wave_o` to `fan_en_b` if fan control is ever needed.
+- Validated 2026-09-25: the `sntp` role (R5 FreeRTOS ↔ A53 over IPI + shared memory) runs on this
+  image. Firmware-side 2025.1 pitfalls (xiltimer tick on the wrong TTC, IPI registered with the
+  GIC ID instead of the SPI number) are fixed in that repo's `gen_bsp.py` / `platform.c`.
 - R5 firmware `stdout` is `psu_uart_1`, the same UART as the Linux console (`ttyPS1`). Accepted:
   the board is used over SSH.
 - The XSA does not need regenerating: TTC0–TTC3 are already enabled in the starter kit design.
